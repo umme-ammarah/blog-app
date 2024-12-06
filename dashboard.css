@@ -1,0 +1,57 @@
+.logo{
+    width: 85px;
+    height: 85px;
+}
+.navbar{
+    background-color: #6e888f !important;
+}
+.navbar-brand{
+    color: #ffff;
+}
+.navbar-brand:hover{
+    color: #ffff;
+}
+.profile-photo {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer; /* Add a pointer cursor to indicate it's clickable */
+  }
+  
+  .profile-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+
+  .images{
+    justify-content: space-around;
+}
+.bg-img{
+    height: 50px;
+    width: 50px;
+    border-radius: 5px;
+}
+.selectedImg{
+    border: 2px solid #11414d;
+}
+
+.postBtn,.editBtn{
+    background-color:#000000;
+    color: #ffff;
+}
+.postBtn:hover, .editBtn:hover{
+    background-color: #ffff;
+    color: #11414d;
+    border: 2px solid #11414d;
+}
+.deleteBtn:hover{
+    background-color: #ffff;
+    color: #dc3545;
+    border: 2px solid #dc3545;
+
+}
+

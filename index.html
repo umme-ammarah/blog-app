@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog Landing Page</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+  <!-- Header Section -->
+  <header class="bg-light py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+      <a href="#" class="text-decoration-none text-dark fw-bold fs-4">Coranu</a>
+      <form class="d-flex">
+        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+      </form>
+      <a href="#" id="registerBtn" class="btn btn-primary">Login/Register</a>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container my-5">
+    <div class="row">
+      <!-- Sidebar -->
+      <aside class="col-md-3 mb-4">
+        <h5 class="mb-3">Blog Topics</h5>
+        <ul class="list-group">
+          <li class="list-group-item"><a href="#" class="text-decoration-none">Company</a></li>
+          <li class="list-group-item"><a href="#" class="text-decoration-none">Design</a></li>
+          <li class="list-group-item"><a href="#" class="text-decoration-none">Technology</a></li>
+          <li class="list-group-item"><a href="#" class="text-decoration-none">Crypto</a></li>
+          <li class="list-group-item"><a href="#" class="text-decoration-none">Artificial Intelligence</a></li>
+          <li class="list-group-item"><a href="#" class="text-decoration-none">Work</a></li>
+        </ul>
+      </aside>
+
+      <!-- Blog Posts -->
+      <div class="col-md-9">
+        <h1 class="mb-4">Thoughts, Ideas, and Stories</h1>
+        <p>A space where creativity flows, ideas take shape, and stories come to life. Dive in, explore, and connect with insights that inspire and resonate.</p>
+
+        <!-- Blog Post 1 -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">Powerful Trading Tools and Features for Experienced Investors</h5>
+            <p class="card-text">Explore a wide range of trading tools and features designed to enhance your investment strategies.</p>
+            <p><small class="text-muted">By Mark Tuchel • 7 min read • Mar 1</small></p>
+            <a href="#" class="btn btn-outline-primary">Read More</a>
+          </div>
+        </div>
+
+        <!-- Blog Post 2 -->
+        <div class="card mb-4">
+          <div class="card-body">
+            <h5 class="card-title">Master JavaScript: 10 Essential Tips Every Developer Must Know</h5>
+            <p class="card-text">Boost your JavaScript skills with these must-know tips for developers.</p>
+            <p><small class="text-muted">By Jerry Chan • 4 min read • Jan 2</small></p>
+            <a href="#" class="btn btn-outline-primary">Read More</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer Section -->
+  <footer class="bg-light py-5">
+    <div class="container">
+      <div class="row">
+        <!-- Newsletter -->
+        <div class="col-md-6">
+          <h5>Stay up to date</h5>
+          <p>Join Our Newsletter</p>
+          <form class="d-flex">
+            <input type="email" class="form-control me-2" placeholder="Enter your email...">
+            <button class="btn btn-primary" type="submit">Submit</button>
+          </form>
+          <p class="small text-muted mt-2">*You can unsubscribe anytime</p>
+        </div>
+        <!-- Footer Text -->
+        <div class="col-md-6 text-md-end mt-4 mt-md-0">
+          <p>© 2024 Coranu. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <script src="firebase.js" type="module"></script>
+  <!-- <script src="dashboard.js" type="module"></script> -->
+  <script src="signup.js" type="module"></script>
+  <script src="script.js" type="module"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
