@@ -1,18 +1,27 @@
 import {
-    doc, setDoc, collection, addDoc,
-    updateDoc, deleteDoc, db
+    doc,
+    setDoc,
+    collection,
+    addDoc,
+    updateDoc,
+    deleteDoc,
+    db,
+    getDocs, // Use getDocs for fetching multiple documents
   } from "./firebase.js";
   
-  let loggedInUserName = localStorage.getItem("userName") || "Anonymous"; // Default to "Anonymous" if no name is found
-  let profilePhotoUrl = localStorage.getItem("profilePhoto") || "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png"; // Default profile photo if none
+  let loggedInUserName =
+    localStorage.getItem("userName") || "Anonymous";
+  let profilePhotoUrl =
+    localStorage.getItem("profilePhoto") ||
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Default_pfp.svg/2048px-Default_pfp.svg.png";
   
-  // This part ensures that the profile photo and input logic works on page load
-  if (document.getElementById("post")) { 
+  // DOM Manipulation Logic
+  if (document.getElementById("post")) {
     const profilePhotoImg = document.getElementById("profilePhotoImg");
-    profilePhotoImg.src = profilePhotoUrl; // Set the profile photo
+    profilePhotoImg.src = profilePhotoUrl;
   
-    const profilePhotoInput = document.getElementById("profilePhotoInput");
-  
+    const profilePhotoInput =
+    document.getElementById("profilePhotoInput");
     profilePhotoImg.addEventListener("click", () => {
       profilePhotoInput.click();
     });
@@ -21,59 +30,51 @@ import {
       const file = e.target.files[0];
       const reader = new FileReader();
       reader.onload = () => {
-        profilePhotoImg.src = reader.result; // Update the image with the uploaded one
-        // Optionally, save the uploaded photo URL to localStorage
+        profilePhotoImg.src = reader.result;
         localStorage.setItem("profilePhoto", reader.result);
       };
       reader.readAsDataURL(file);
     });
   
-    var backgroundImg;
+    // Function to fetch and display posts from Firestore
+    const displayPosts = async () => {
+      const postContainer = document.getElementById("post");
+      postContainer.innerHTML = ''; // Clear existing posts
   
-    // The function to create a post
-    window.createPost = async function () {
-      var title = document.getElementById("title");
-      var description = document.getElementById("description");
-      var categoryElement = document.getElementById("category"); // Get category input element
-      var category = categoryElement.value; // Get the selected category
-      var currentTime = new Date().toLocaleTimeString();
-      var userName = loggedInUserName; // Use logged-in user's name
+      try {
+        // Use getDocs to fetch all posts from the "blogs" collection
+        const querySnapshot = await getDocs(collection(db, "blogs"));
+        
+        if (querySnapshot.empty) {
+          console.log("No posts available.");
+          postContainer.innerHTML = "<p>No posts available.</p>";
+          return;
+        }
+        
+        // Loop through each post in the collection
+        querySnapshot.forEach((doc) => {
+          const postData = doc.data();
+          const postId = doc.id;
+          console.log(postData);  // Log data for debugging
   
-      // Log the values to debug
-      console.log("Title:", title.value);
-      console.log("Description:", description.value);
+          const currentTime = new Date(postData.createdAt.seconds * 1000).toLocaleTimeString(); // Convert timestamp to time string
   
-      // Check if title and description are filled
-      if (title && title.value.trim() && description && description.value.trim()) {
-        // Add the post data to Firestore
-        try {
-          const docRef = await addDoc(collection(db, "blogs"), {
-            title: title.value.trim(), // Ensure no extra spaces
-            description: description.value.trim(), // Ensure no extra spaces
-            category: category,
-            userName: userName,
-            createdAt: new Date(), // Save the creation time of the post
-          });
-          console.log("Document written with ID: ", docRef.id);
-  
-          // Now, update the UI with the new post
-          var postContainer = document.getElementById("post");
           postContainer.innerHTML += `
-            <div class="card p-2 mb-2" data-id="${docRef.id}">
+            <div class="card p-2 mb-2" data-id="${postId}">
               <div class="card-header d-flex justify-content-between">
                 <div class="d-flex">
-                  <img class="profile-photo me-2" src="${profilePhotoImg.src}" />
+                  <img class="profile-photo me-2" src="${profilePhotoUrl}" />
                   <div class="name-time d-flex flex-column">
-                    <span>${userName}</span>
+                    <span>${postData.userName}</span>
                     <span class="text-muted time">${currentTime}</span>
                   </div>
                 </div>
-                <strong class="category text-muted">Category: ${category}</strong>
+                <strong class="category text-muted">Category: ${postData.category}</strong>
               </div>
-              <div style="background-image: url(${backgroundImg})" class="card-body">
+              <div class="card-body">
                 <blockquote class="blockquote mb-0">
-                  <p>${title.value}</p>
-                  <footer class="blockquote-footer">${description.value}</footer>
+                  <p>${postData.title}</p>
+                  <footer class="blockquote-footer">${postData.description}</footer>
                 </blockquote>
               </div>
               <div class="card-footer d-flex justify-content-end">
@@ -81,107 +82,94 @@ import {
                 <button type="button" onclick="deletePost(this)" class="ms-2 btn btn-danger deleteBtn">Delete</button>
               </div>
             </div>`;
-  
-          // Reset fields after adding post to UI
-          title.value = "";
-          description.value = "";
-          categoryElement.selectedIndex = 0; // Reset category dropdown to default
-        } catch (error) {
-          console.log("Error adding document: ", error);
-        }
-      } else {
+        });
+      } catch (error) {
+        console.error("Error fetching posts:", error.message);  // Log error message for debugging
         Swal.fire({
-          title: "Empty Post",
-          text: "Can't publish post without Title or Description",
-          icon: "question",
+          title: "Error",
+          text: "An error occurred while fetching posts.",
+          icon: "error",
         });
       }
     };
   
-    // Function to handle image selection for background
-    function selectImg(src) {
-      backgroundImg = src;
-      var bgImg = document.getElementsByClassName("bg-img");
+    // Call displayPosts to fetch and show posts when page loads
+    displayPosts();
   
-      for (var i = 0; i < bgImg.length; i++) {
-        bgImg[i].className = "bg-img";
+    // Function to create or update a post
+    window.createOrUpdatePost = async function () {
+      const title = document.getElementById("title").value.trim();
+      const description = document.getElementById("description").value.trim();
+      const categoryElement = document.getElementById("category");
+      const category = categoryElement.value;
+      const currentTime = new Date().toLocaleTimeString();
+  
+      const postId = localStorage.getItem("editingPostId") || null;
+  
+      if (!title || !description) {
+        Swal.fire({
+          title: "Empty Fields",
+          text: "Please ensure all fields are filled out.",
+          icon: "error",
+        });
+        return;
       }
-      event.target.className += " selectedImg";
-    }
-  
-    // Add the functions to the window object to make them globally available
-    window.deletePost = async function (button) {
-      var postElement = button.parentNode.parentNode;
-      var postId = postElement.getAttribute("data-id");
   
       try {
-        // Delete from Firestore
-        await deleteDoc(doc(db, "blogs", postId));
-        console.log("Document successfully deleted from Firestore");
+        // Use `setDoc` to either create or update the post
+        const docRef = postId
+          ? doc(db, "blogs", postId) // For update, use existing ID
+          : doc(collection(db, "blogs")); // For new post, generate new ID
   
-        // Remove from the DOM
-        postElement.remove();
-      } catch (error) {
-        console.log("Error deleting document: ", error);
-      }
-    }
+        await setDoc(docRef, {
+          title,
+          description,
+          category,
+          userName: loggedInUserName,
+          createdAt: new Date(),
+        });
   
-    window.editPost = async function (button) {
-      var postElement = button.parentNode.parentNode;
-      var postId = postElement.getAttribute("data-id");
+        const postContainer = document.getElementById("post");
   
-      // Extract post content from DOM
-      var title = postElement.querySelector(".blockquote p").innerHTML;
-      var description = postElement.querySelector(".blockquote-footer").innerHTML;
-      var category = postElement.querySelector(".category").innerHTML.replace("Category: ", ""); // Extract category
-      document.getElementById("title").value = title;
-      document.getElementById("description").value = description;
-      document.getElementById("category").value = category;
-  
-      // Remove post from UI (it will be updated after saving changes)
-      postElement.remove();
-  
-      // Save post data to a hidden field or global variable for later reference
-      localStorage.setItem("editingPostId", postId);
-    }
-  
-    // Function to save the updated post
-    window.saveUpdatedPost = async function () {
-      var postId = localStorage.getItem("editingPostId");
-      var title = document.getElementById("title");
-      var description = document.getElementById("description");
-      var categoryElement = document.getElementById("category");
-      var category = categoryElement.value;
-  
-      if (title && title.value.trim() && description && description.value.trim()) {
-        try {
-          // Update the post in Firestore
-          const postRef = doc(db, "blogs", postId);
-          await updateDoc(postRef, {
-            title: title.value.trim(),
-            description: description.value.trim(),
-            category: category,
+        if (postId) {
+          // Update the DOM for the edited post
+          const postElement = document.querySelector(
+            `.card[data-id="${postId}"]`
+          );
+          if (postElement) {
+            postElement.querySelector(
+              ".blockquote p"
+            ).textContent = title;
+            postElement.querySelector(
+              ".blockquote-footer"
+            ).textContent = description;
+            postElement.querySelector(
+              ".category"
+            ).textContent = `Category: ${category}`;
+          }
+          Swal.fire({
+            title: "Post Updated",
+            text: "Your post has been successfully updated!",
+            icon: "success",
           });
-          console.log("Document successfully updated");
-  
-          // Update the UI accordingly after editing
-          var postContainer = document.getElementById("post");
+        } else {
+          // Add a new post to the DOM
           postContainer.innerHTML += `
-            <div class="card p-2 mb-2" data-id="${postId}">
+            <div class="card p-2 mb-2" data-id="${docRef.id}">
               <div class="card-header d-flex justify-content-between">
                 <div class="d-flex">
-                  <img class="profile-photo me-2" src="${profilePhotoImg.src}" />
+                  <img class="profile-photo me-2" src="${profilePhotoUrl}" />
                   <div class="name-time d-flex flex-column">
                     <span>${loggedInUserName}</span>
-                    <span class="text-muted time">${new Date().toLocaleTimeString()}</span>
+                    <span class="text-muted time">${currentTime}</span>
                   </div>
                 </div>
                 <strong class="category text-muted">Category: ${category}</strong>
               </div>
               <div class="card-body">
                 <blockquote class="blockquote mb-0">
-                  <p>${title.value}</p>
-                  <footer class="blockquote-footer">${description.value}</footer>
+                  <p>${title}</p>
+                  <footer class="blockquote-footer">${description}</footer>
                 </blockquote>
               </div>
               <div class="card-footer d-flex justify-content-end">
@@ -189,21 +177,87 @@ import {
                 <button type="button" onclick="deletePost(this)" class="ms-2 btn btn-danger deleteBtn">Delete</button>
               </div>
             </div>`;
-  
-          // Reset fields after updating post
-          title.value = "";
-          description.value = "";
-          categoryElement.selectedIndex = 0;
-        } catch (error) {
-          console.log("Error updating document: ", error);
+          Swal.fire({
+            title: "Post Created",
+            text: "Your post has been successfully created!",
+            icon: "success",
+          });
         }
-      } else {
+  
+        // Clear input fields and reset localStorage
+        localStorage.removeItem("editingPostId");
+        document.getElementById("title").value = "";
+        document.getElementById("description").value = "";
+        categoryElement.selectedIndex = 0;
+  
+        // Reload posts after adding/updating
+        displayPosts();
+      } catch (error) {
+        console.error("Error saving post:", error);
         Swal.fire({
-          title: "Empty Post",
-          text: "Can't update post without Title or Description",
-          icon: "question",
+          title: "Error",
+          text: "An error occurred while saving your post.",
+          icon: "error",
         });
       }
+    };
+  
+    // Function to delete a post with SweetAlert2 confirmation
+    window.deletePost = async function (button) {
+      const postElement = button.parentNode.parentNode;
+      const postId = postElement.getAttribute("data-id");
+  
+      // SweetAlert2 confirmation before deleting the post
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to undo this action!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'No, cancel!',
+        width: '300px',  // Set width for smaller box
+        padding: '10px',
+        customClass: {
+          popup: 'small-alert-popup' // Custom class for small alert styling
+        }
+      });
+  
+      if (result.isConfirmed) {
+        try {
+          await deleteDoc(doc(db, "blogs", postId));
+          postElement.remove();
+          console.log("Document successfully deleted.");
+          Swal.fire('Deleted!', 'Your post has been deleted.', 'success');
+  
+          // Reload posts after deletion
+          displayPosts();
+        } catch (error) {
+          console.error("Error deleting document: ", error);
+        }
+      } else {
+        console.log("Post deletion canceled.");
+      }
+    };
+  
+    // Function to edit a post
+    window.editPost = function (button) {
+      const postElement = button.parentNode.parentNode;
+      const postId = postElement.getAttribute("data-id");
+  
+      const title = postElement.querySelector(
+        ".blockquote p"
+      ).textContent;
+      const description = postElement.querySelector(
+        ".blockquote-footer"
+      ).textContent;
+      const category = postElement
+        .querySelector(".category")
+        .textContent.replace("Category: ", "");
+  
+      localStorage.setItem("editingPostId", postId);
+      document.getElementById("title").value = title;
+      document.getElementById("description").value = description;
+      document.getElementById("category").value = category;
     };
   }
   
